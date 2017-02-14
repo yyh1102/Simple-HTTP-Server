@@ -68,26 +68,24 @@ HTTP_REQ *Socket::getData(SOCKET client){
 	while (!isEnd){
 		memset(recData, 0, 65535);
 		ret = recv(client, (char *)recData, bufferLen, 0);
-		if (ret > 0){
-			char *endSymbol = strstr((char *)recData, "\r\n");
-			if (endSymbol != NULL){												//若发完，则直接返回
+		if (ret > 0){									
+			if (ret % 65535 != 0){
 				isEnd = true;
 				reqEnd = ret;
 				memcpy(result, recData, reqEnd);
-				bufferLen = 65535;
-			}
-			else{																//若未发完，则新分配64KB给它
+			}	
+			else{							//若可能未发完，则再分配64k
 				bufferLen += 65535;
 				byte *temp = new byte[bufferLen];
 				memset(temp, 0, bufferLen);
-				memcpy(temp, result, reqEnd);									//拷贝已收到的消息
-				memcpy(&temp[reqEnd], recData, strlen((char *)recData));		//拷贝新消息
+				memcpy(temp, result, reqEnd);								//拷贝已收到的消息
+				memcpy(&temp[reqEnd], recData, strlen((char *)recData));	//拷贝新消息
 				reqEnd += ret;
 				//delete[] result;
 				result = temp;
 			}
 		}
-		if (ret == SOCKET_ERROR || ret == 0) return NULL;
+		if (ret == SOCKET_ERROR || ret==0) return NULL;
 	}
 	//printf("parse finish:%s\n",result);
 	HTTP_REQ *request = new HTTP_REQ;
